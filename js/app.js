@@ -202,14 +202,18 @@ async function startSession() {
   }
 
   if (dueWords.length + freshWords.length === 0) {
-    // 自由加练：优先挑掌握最弱的已学词；不足 10 个再用未学的新词补足
-    const pool = SCOPE.filter((x) => CARDS.has(x.w))
-      .sort((a, b) => (CARDS.get(a.w).stability || 0) - (CARDS.get(b.w).stability || 0))
-      .slice(0, 10).map((x) => x.w);
+    // 自由加练：优先提前背未学的新词，不足 10 个再用掌握最弱的已学词补足
+    const pool = [];
+    for (const x of SCOPE) {
+      if (pool.length >= 10) break;
+      if (!introduced.has(x.w)) pool.push(x.w);
+    }
     if (pool.length < 10) {
-      for (const x of SCOPE) {
+      const learned = SCOPE.filter((x) => CARDS.has(x.w) && !pool.includes(x.w))
+        .sort((a, b) => (CARDS.get(a.w).stability || 0) - (CARDS.get(b.w).stability || 0));
+      for (const x of learned) {
         if (pool.length >= 10) break;
-        if (!introduced.has(x.w)) pool.push(x.w);
+        pool.push(x.w);
       }
     }
     if (!pool.length) { toast("当前范围没有可学的词，先完成首轮吧"); return; }
