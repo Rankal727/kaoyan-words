@@ -195,18 +195,26 @@ async function startSession() {
   }
   const introduced = new Set(CARDS.keys());
   const freshWords = [];
-  for (const x of SCOPE) {
-    if (!introduced.has(x.w)) { freshWords.push(x.w); if (freshWords.length >= remainNew) break; }
+  if (remainNew > 0) {  // 剩余新词为 0 时不再收集，交给自由加练分支
+    for (const x of SCOPE) {
+      if (!introduced.has(x.w)) { freshWords.push(x.w); if (freshWords.length >= remainNew) break; }
+    }
   }
 
   if (dueWords.length + freshWords.length === 0) {
-    // 自由加练：按排名补 10 个已学但未到期的词（优先掌握度低的）
+    // 自由加练：优先挑掌握最弱的已学词；不足 10 个再用未学的新词补足
     const pool = SCOPE.filter((x) => CARDS.has(x.w))
       .sort((a, b) => (CARDS.get(a.w).stability || 0) - (CARDS.get(b.w).stability || 0))
       .slice(0, 10).map((x) => x.w);
+    if (pool.length < 10) {
+      for (const x of SCOPE) {
+        if (pool.length >= 10) break;
+        if (!introduced.has(x.w)) pool.push(x.w);
+      }
+    }
     if (!pool.length) { toast("当前范围没有可学的词，先完成首轮吧"); return; }
     S.queue = pool;
-    S.isNew = pool.map(() => false);
+    S.isNew = pool.map((w) => !introduced.has(w));
   } else {
     S.queue = dueWords.concat(freshWords);
     S.isNew = S.queue.map((_, i) => i >= dueWords.length);
