@@ -1,0 +1,25 @@
+{
+ "sources": [
+  {
+   "name": "考研词汇词频排序表（2002–2024 共 22 年真题统计，5530 词）",
+   "url": "https://github.com/exam-data/NETEMVocabulary",
+   "license": "数据 CC BY-NC-SA 4.0（非商用）；代码 MIT"
+  },
+  {
+   "name": "红宝书考研词汇结构化释义",
+   "url": "https://github.com/3056810551/2027-kaoyan-english-redbook-json",
+   "license": "MIT，原作者注明仅限学习交流，请勿用于商业用途"
+  },
+  {
+   "name": "考研英语一真题原文（1998–2025，例句逐字摘录自此）",
+   "url": "https://github.com/LIziak112/structured-kaoyan-english",
+   "license": "试题数据层不主张权利、无使用限制；解析层未使用"
+  },
+  {
+   "name": "词形变化由 lemminflect（MIT）按规则生成",
+   "url": "https://github.com/benhaney/lemminflect",
+   "license": "MIT"
+  }
+ ],
+ "note": "真题原句逐字摘录自公开考研英语真题（英语一/英语二，标注卷别与出处），仅供个人学习使用；本词库不含任何 AI 生成内容。"
+}

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#6366f1">
+<title>考研英语一 · 高频词记背</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ 今日 ============ -->
+  <section class="view" id="view-today">
+    <header class="page-head">
+      <div>
+        <div class="greeting" id="greeting">你好</div>
+        <div class="sub" id="today-date"></div>
+      </div>
+      <div class="head-actions">
+        <button class="icon-btn" id="btn-theme" aria-label="切换深浅色"></button>
+        <div class="streak-badge" id="streak-badge">🔥 0 天</div>
+      </div>
+    </header>
+
+    <div class="week-strip" id="week-strip"></div>
+
+    <div class="card hero">
+      <div class="hero-top">
+        <div class="ring-wrap">
+          <div class="ring" id="day-ring"></div>
+          <span class="ring-label" id="ring-pct">0%</span>
+        </div>
+        <div class="hero-nums">
+          <div class="hn"><b id="stat-due">0</b><span>待复习</span></div>
+          <div class="hn"><b id="stat-new">0</b><span>新词</span></div>
+          <div class="hn"><b id="stat-learned">0</b><span>已学</span></div>
+        </div>
+      </div>
+      <button class="btn-hero" id="btn-start">开始学习</button>
+      <div class="today-done" id="today-done" hidden>✅ 今日任务已完成，明天见！也可以继续加练。</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">高频词覆盖率</div>
+      <div class="bar-track"><div class="bar-fill coverage-bar-fill" id="coverage-bar" style="width:0%"></div></div>
+      <div class="bar-caption" id="coverage-caption">已学 0 / 高频 2000 词</div>
+    </div>
+  </section>
+
+  <!-- ============ 学习（全屏层） ============ -->
+  <section class="view overlay-view" id="view-learn" hidden>
+    <header class="learn-head">
+      <button class="icon-btn" id="btn-learn-exit" aria-label="退出">✕</button>
+      <div class="bar-track slim"><div class="bar-fill" id="learn-progress" style="width:0%"></div></div>
+      <span class="learn-count" id="learn-count">0/0</span>
+    </header>
+    <div class="learn-body">
+      <div class="learn-card" id="learn-card">
+        <div class="word-line">
+          <span class="word" id="learn-word">—</span>
+          <button class="icon-btn sound" id="learn-sound" aria-label="发音">
+            <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          </button>
+        </div>
+        <div class="phonetic" id="learn-phonetic"></div>
+        <div class="reveal" id="learn-reveal" hidden>
+          <div class="meaning" id="learn-meaning"></div>
+          <div class="forms" id="learn-forms"></div>
+          <div class="example" id="learn-example"></div>
+        </div>
+      </div>
+      <button class="btn-primary big" id="btn-show">显示释义</button>
+      <div class="rate-row" id="rate-row" hidden>
+        <button class="btn-rate again" data-rate="Again">忘了</button>
+        <button class="btn-rate hard" data-rate="Hard">模糊</button>
+        <button class="btn-rate good" data-rate="Good">认识</button>
+      </div>
+      <div class="rate-hint" id="rate-hint" hidden>根据记忆情况选择，越牢的词下次出现越晚</div>
+    </div>
+    <div class="learn-summary" id="learn-summary" hidden>
+      <div class="sum-big" id="sum-big">🎉</div>
+      <div class="sum-detail" id="sum-detail"></div>
+      <button class="btn-primary big" id="btn-sum-back">返回今日</button>
+    </div>
+  </section>
+
+  <!-- ============ 词库 ============ -->
+  <section class="view" id="view-dict" hidden>
+    <header class="page-head">
+      <div><div class="greeting">词库</div><div class="sub" id="dict-count"></div></div>
+    </header>
+    <div class="search-wrap">
+      <input id="dict-search" type="search" placeholder="搜索单词 / 中文释义" autocomplete="off">
+    </div>
+    <div class="chip-row" id="dict-filters">
+      <button class="chip active" data-filter="all">全部</button>
+      <button class="chip" data-filter="高频">高频</button>
+      <button class="chip" data-filter="中频">中频</button>
+      <button class="chip" data-filter="低频">低频</button>
+      <button class="chip" data-filter="learned">已学</button>
+      <button class="chip" data-filter="unlearned">未学</button>
+    </div>
+    <div class="dict-scroll" id="dict-scroll">
+      <div class="dict-spacer" id="dict-spacer">
+        <div class="dict-window" id="dict-window"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 统计 ============ -->
+  <section class="view" id="view-stats" hidden>
+    <header class="page-head">
+      <div><div class="greeting">统计</div><div class="sub">学习足迹与记忆情况</div></div>
+    </header>
+    <div class="card">
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-num" id="s-learned">0</div><div class="stat-label">已学</div></div>
+        <div class="stat"><div class="stat-num" id="s-mastered">0</div><div class="stat-label">已掌握</div></div>
+        <div class="stat"><div class="stat-num" id="s-reviews">0</div><div class="stat-label">累计复习</div></div>
+        <div class="stat"><div class="stat-num" id="s-days">0</div><div class="stat-label">学习天数</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">最近 14 天</div>
+      <div class="chart14" id="chart14"></div>
+      <div class="legend"><span class="dot new"></span>新学 <span class="dot rev"></span>复习</div>
+    </div>
+    <div class="card">
+      <div class="card-title">最近 90 天打卡</div>
+      <div class="heatmap" id="heatmap"></div>
+    </div>
+  </section>
+
+  <!-- ============ 设置 ============ -->
+  <section class="view" id="view-settings" hidden>
+    <header class="page-head">
+      <div><div class="greeting">设置</div><div class="sub">学习偏好与数据</div></div>
+    </header>
+    <div class="card">
+      <div class="setting-row">
+        <div><div class="setting-name">外观</div><div class="setting-desc">深浅色主题</div></div>
+        <div class="seg" id="theme-seg">
+          <button data-theme-mode="auto" class="active">跟随系统</button>
+          <button data-theme-mode="light">浅色</button>
+          <button data-theme-mode="dark">深色</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-name">每日新词量</div><div class="setting-desc">复习数量不受此限制</div></div>
+        <div class="stepper">
+          <button id="new-minus">−</button><span id="new-value">30</span><button id="new-plus">＋</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-name">词库范围</div><div class="setting-desc">高频 = 真题词频 Top 2000</div></div>
+        <div class="seg" id="scope-seg">
+          <button data-scope="high" class="active">高频 2000</button>
+          <button data-scope="all">全量 5530</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-name">单词发音</div><div class="setting-desc">在线美音，失败时用本地 TTS</div></div>
+        <label class="switch"><input type="checkbox" id="audio-toggle" checked><span></span></label>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">数据</div>
+      <button class="btn-ghost" id="btn-export">导出学习备份 (JSON)</button>
+      <button class="btn-ghost" id="btn-import">导入学习备份</button>
+      <input type="file" id="import-file" accept="application/json" hidden>
+      <button class="btn-ghost danger" id="btn-reset">清空全部学习数据</button>
+    </div>
+    <div class="card">
+      <div class="card-title">关于 · 数据来源与协议</div>
+      <div class="about" id="about-src">加载中…</div>
+    </div>
+  </section>
+
+  <!-- 底部导航（悬浮胶囊） -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tab active" data-view="today">
+      <span class="tab-ico"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.7V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.7"/><path d="M9.5 21v-6h5v6"/></svg></span>今日
+    </button>
+    <button class="tab" data-view="dict">
+      <span class="tab-ico"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>词库
+    </button>
+    <button class="tab" data-view="stats">
+      <span class="tab-ico"><svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></span>统计
+    </button>
+    <button class="tab" data-view="settings">
+      <span class="tab-ico"><svg viewBox="0 0 24 24"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/></svg></span>设置
+    </button>
+  </nav>
+
+  <!-- 单词详情浮层 -->
+  <div class="sheet-mask" id="detail-mask" hidden>
+    <div class="sheet" id="detail-sheet"></div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script src="vendor/dexie.min.js"></script>
+<script src="vendor/ts-fsrs.umd.js"></script>
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
