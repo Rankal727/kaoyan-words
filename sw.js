@@ -1,5 +1,5 @@
 /* Service Worker：离线缓存（应用壳 + 词库） */
-const CACHE = "gwc-v6";
+const CACHE = "gwc-v7";
 const CORE = [
   "./",
   "index.html",

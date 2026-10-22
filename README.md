@@ -31,4 +31,8 @@ python -m http.server 8137
 | 复习调度 | [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs) | MIT |
 | 音标与发音 | [Free Dictionary API](https://dictionaryapi.dev) | CC BY-SA 3.0 |
 
-应用内"设置 → 关于"页同样展示署名。**本项目仅限个人学习使用，禁止商用。**
+应用内"设置 → 关于"页同样展示署名。本应用的词库文件 `data/words.json` 系对上述数据的整理与改编，依 CC BY-NC-SA 4.0 的"相同方式共享"要求，**同样以 CC BY-NC-SA 4.0 授权提供，仅限非商业用途**。
+
+随应用分发的开源组件：ts-fsrs（MIT）、Dexie（Apache-2.0），完整许可文本见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
+
+**本项目仅供个人学习使用，禁止商用。**

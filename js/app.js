@@ -564,10 +564,17 @@ function bindSettings() {
 
 function renderAbout() {
   if (!PROV) { $("about-src").textContent = "来源信息加载失败"; return; }
-  $("about-src").innerHTML =
-    PROV.sources.map((s) =>
-      `<div class="src-item">${esc(s.name)}<br><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a><br>协议：${esc(s.license)}</div>`
-    ).join("") + `<div style="margin-top:6px">${esc(PROV.note)}</div>`;
+  let html = PROV.sources.map((s) =>
+    `<div class="src-item">${esc(s.name)}<br><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a><br>协议：${esc(s.license)}</div>`
+  ).join("");
+  if (PROV.derived) html += `<div class="src-item" style="color:var(--text)">${esc(PROV.derived)}</div>`;
+  if (PROV.components) {
+    html += `<div class="src-item">开源组件：` + PROV.components.map((c) =>
+      `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)}</a>（${esc(c.license)}）`).join("、") + `</div>`;
+  }
+  if (PROV.notices) html += `<div>${esc(PROV.notices)}</div>`;
+  html += `<div style="margin-top:6px">${esc(PROV.note)}</div>`;
+  $("about-src").innerHTML = html;
 }
 
 /* ---------------- 发音 ---------------- */

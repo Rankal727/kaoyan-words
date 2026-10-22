@@ -11,15 +11,21 @@
    "license": "MIT，原作者注明仅限学习交流，请勿用于商业用途"
   },
   {
-   "name": "考研英语一真题原文（1998–2025，例句逐字摘录自此）",
+   "name": "考研英语真题原文（1998–2025，例句逐字摘录自此）",
    "url": "https://github.com/LIziak112/structured-kaoyan-english",
    "license": "试题数据层不主张权利、无使用限制；解析层未使用"
   },
   {
-   "name": "词形变化由 lemminflect（MIT）按规则生成",
+   "name": "词形变化由 lemminflect 按规则在构建期生成（不随应用分发）",
    "url": "https://github.com/benhaney/lemminflect",
    "license": "MIT"
   }
  ],
+ "derived": "本应用词库 data/words.json 系对上述数据的整理与改编，依『相同方式共享』要求，同样以 CC BY-NC-SA 4.0 授权提供，仅限非商业用途。本应用仅供个人学习使用，禁止商用。",
+ "components": [
+  {"name": "ts-fsrs（复习调度算法）", "url": "https://github.com/open-spaced-repetition/ts-fsrs", "license": "MIT"},
+  {"name": "Dexie（IndexedDB 封装）", "url": "https://github.com/dexie/Dexie.js", "license": "Apache-2.0"}
+ ],
+ "notices": "完整许可文本见仓库 THIRD-PARTY-NOTICES.md",
  "note": "真题原句逐字摘录自公开考研英语真题（英语一/英语二，标注卷别与出处），仅供个人学习使用；本词库不含任何 AI 生成内容。"
 }
