@@ -197,23 +197,30 @@ body {
 }
 .learn-count { font-size: 13px; color: var(--text-2); min-width: 44px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
 .learn-body {
-  flex: 1; display: flex; flex-direction: column; justify-content: center;
-  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  flex: 1; display: flex; flex-direction: column; min-height: 0;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
 }
 .learn-card {
   background: var(--card); border-radius: 22px; border: 1px solid var(--border);
-  padding: 42px 22px 32px; text-align: center; min-height: 310px;
+  padding: 34px 22px 26px; text-align: center;
+  flex: 1 1 auto; min-height: 0; max-height: 100%;
   display: flex; flex-direction: column; justify-content: center;
-  margin-bottom: 14px;
+  margin-bottom: 14px; overflow: hidden;
   animation: cardin .24s ease;
   transition: transform .16s ease, opacity .16s ease;
 }
 @keyframes cardin { from { transform: scale(.975) translateY(6px); opacity: .55; } to { transform: none; opacity: 1; } }
 .learn-card.swipe-out { transform: translateX(-36%) scale(.96); opacity: 0; }
+.learn-card .word-line, .learn-card .phonetic { flex: none; }
 .word-line { display: flex; align-items: center; justify-content: center; gap: 12px; }
 .word { font-size: 36px; font-weight: 700; letter-spacing: .3px; }
 .phonetic { color: var(--text-2); margin-top: 8px; font-size: 15px; min-height: 22px; }
-.reveal { margin-top: 20px; text-align: left; border-top: 1px solid var(--border); padding-top: 16px; animation: revealin .26s ease; }
+.reveal {
+  margin-top: 20px; text-align: left; border-top: 1px solid var(--border); padding-top: 16px;
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: none; animation: revealin .26s ease;
+}
+.reveal::-webkit-scrollbar { display: none; }
 @keyframes revealin { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .meaning { font-size: 18px; font-weight: 700; }
 .meaning .detail {
@@ -232,7 +239,9 @@ body {
 }
 .example .src { display: block; font-size: 12px; color: var(--text-3); margin-top: 6px; }
 
-.rate-row { display: flex; gap: 10px; margin-top: 4px; }
+.rate-row { display: flex; gap: 10px; margin-top: 4px; flex-shrink: 0; }
+#btn-show { flex-shrink: 0; }
+.rate-hint { flex-shrink: 0; }
 .btn-rate {
   flex: 1; appearance: none; border: 1px solid transparent; font-size: 15.5px; font-weight: 600;
   padding: 13px 0; border-radius: var(--r-md); cursor: pointer; letter-spacing: 3px;
