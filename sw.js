@@ -6,7 +6,7 @@
  *      因此可以放心 cache-first，不再每次打开都重新下载。
  *   3. 改前端代码时同步改 CACHE 版本号，旧缓存才会被清掉。
  */
-const CACHE = "gwc-v11";
+const CACHE = "gwc-v12";
 const SHELL = [
   "./",
   "index.html",

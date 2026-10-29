@@ -143,14 +143,16 @@ function fetchText(url, timeoutMs) {
     .finally(() => clearTimeout(timer));
 }
 
-/** 先走 jsDelivr（国内访问 GitHub Pages 常只有几 KB/s），失败再回源本站 */
-async function fetchData(path, timeoutMs) {
-  const cdn = CDN_BASE + path;
-  const sources = navigator.onLine === false ? [path] : [cdn, path];
+/** 先走 jsDelivr（国内访问 GitHub Pages 常只有几 KB/s），失败再回源本站。
+ *  两个来源的超时分开设置：首屏文件要快速失败切源，详情文件允许慢速下载完。 */
+async function fetchData(path, cdnTimeoutMs, localTimeoutMs) {
+  const sources = navigator.onLine === false
+    ? [[path, localTimeoutMs]]
+    : [[CDN_BASE + path, cdnTimeoutMs], [path, localTimeoutMs]];
   let lastErr = null;
-  for (let i = 0; i < sources.length; i++) {
+  for (const [url, ms] of sources) {
     try {
-      return await fetchText(sources[i], i === 0 && sources.length > 1 ? timeoutMs : Math.max(timeoutMs, 30000));
+      return await fetchText(url, ms);
     } catch (e) {
       lastErr = e;
     }
@@ -173,7 +175,7 @@ async function loadCore() {
   if (cached && Array.isArray(cached.rows) && cached.rows.length) {
     if (cached.ver === DATA_VER) return cached.rows;
     try {
-      const rows = parseCore(await fetchData(CORE_URL, 8000));
+      const rows = parseCore(await fetchData(CORE_URL, 5000, 60000));
       kvPut("core", { ver: DATA_VER, rows });
       return rows;
     } catch (e) {
@@ -181,7 +183,7 @@ async function loadCore() {
       return cached.rows;
     }
   }
-  const rows = parseCore(await fetchData(CORE_URL, 4000));
+  const rows = parseCore(await fetchData(CORE_URL, 5000, 60000));
   kvPut("core", { ver: DATA_VER, rows });
   return rows;
 }
@@ -193,7 +195,7 @@ function loadDetail() {
     detailPromise = (async () => {
       let rec = await kvGet("detail");
       if (!rec || rec.ver !== coreVer || !Array.isArray(rec.d)) {
-        const obj = JSON.parse(await fetchData(`data/detail.v${coreVer}.json`, 25000));
+        const obj = JSON.parse(await fetchData(`data/detail.v${coreVer}.json`, 60000, 120000));
         rec = { ver: coreVer, l: obj.l || [], c: obj.c || [], s: obj.s || [], d: obj.d || [] };
         kvPut("detail", rec);
       }
