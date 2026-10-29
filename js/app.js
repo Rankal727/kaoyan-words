@@ -8,6 +8,7 @@
  * 文件名随之变化，旧缓存自动失效。
  */
 const DATA_VER = 1;
+const APP_VER = "2.0";
 const CORE_URL = `data/core.v${DATA_VER}.txt`;
 const CDN_BASE = "https://cdn.jsdelivr.net/gh/Rankal727/kaoyan-words@main/";
 /* ---------------- 全局状态 ---------------- */
@@ -75,6 +76,9 @@ async function init() {
   bindDict();
   bindStatsView();
   bindSettings();
+  const startBtn = $("btn-start");
+  startBtn.disabled = true;
+  startBtn.textContent = "词库加载中…";   // 首帧就是明确的加载态，避免点了没反应
   showView("today");      // 先渲染页面骨架，不等词库
   registerSW();
   loadProvenance();
@@ -104,7 +108,9 @@ function registerSW() {
     // 新版本接管后自动刷新一次，让新代码立即生效；学习中途不打断
     if (hadController && !S.active) location.reload();
   });
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+  navigator.serviceWorker.register("sw.js").then((reg) => {
+    reg.update().catch(() => {});   // 主动查一次更新，别等浏览器 24 小时轮询
+  }).catch(() => {});
 }
 
 async function reloadCards() {
@@ -125,6 +131,7 @@ function applyCore(rows) {
   applyScope();
   const allBtn = document.querySelector('#scope-seg button[data-scope="all"]');
   if (allBtn) allBtn.textContent = `全量 ${WORDS.length}`;
+  renderAbout();   // 版本信息里的词条数需要词库就绪后才准确
 }
 
 function applyScope() {
@@ -812,8 +819,9 @@ function bindSettings() {
 }
 
 function renderAbout() {
-  if (!PROV) { $("about-src").textContent = "来源信息加载中…"; return; }
-  let html = PROV.sources.map((s) =>
+  const verLine = `<div class="src-item">应用版本 ${esc(APP_VER)} · 词库 v${DATA_VER}（${WORDS.length || "…"} 词）</div>`;
+  if (!PROV) { $("about-src").innerHTML = verLine + "<div>来源信息加载中…</div>"; return; }
+  let html = verLine + PROV.sources.map((s) =>
     `<div class="src-item">${esc(s.name)}<br><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a><br>协议：${esc(s.license)}</div>`
   ).join("");
   if (PROV.derived) html += `<div class="src-item" style="color:var(--text)">${esc(PROV.derived)}</div>`;
