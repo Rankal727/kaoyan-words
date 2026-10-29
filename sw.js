@@ -6,7 +6,8 @@
  *      因此可以放心 cache-first，不再每次打开都重新下载。
  *   3. 改前端代码时同步改 CACHE 版本号，旧缓存才会被清掉。
  */
-const CACHE = "gwc-v12";
+const CACHE = "gwc-v13";
+const INSTALL_TIMEOUT = 15000;   // 单个文件安装超时：弱网下绝不能把安装挂死
 const SHELL = [
   "./",
   "index.html",
@@ -24,11 +25,24 @@ const SHELL = [
 self.addEventListener("install", (e) => {
   e.waitUntil((async () => {
     const cache = await caches.open(CACHE);
-    // 逐个缓存：单个文件失败（弱网/被拦截）不影响其余文件和其他功能
-    await Promise.allSettled(SHELL.map((url) => cache.add(new Request(url, { cache: "reload" }))));
+    // 每个文件独立超时 + 独立失败：任何一个卡住或 404 都不会让整个安装停在 installing
+    await Promise.allSettled(SHELL.map((url) => putWithTimeout(cache, url)));
     await self.skipWaiting();
   })());
 });
+
+async function putWithTimeout(cache, url) {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), INSTALL_TIMEOUT);
+  try {
+    const resp = await fetch(url, { cache: "reload", signal: ctl.signal });
+    if (resp.ok) await cache.put(url, resp);
+  } catch (e) {
+    // 失败不阻塞安装：该资源在首次实际请求时仍会被运行时缓存
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
