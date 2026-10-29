@@ -1,6 +1,13 @@
-/* Service Worker：离线缓存（应用壳 + 词库） */
-const CACHE = "gwc-v10";
-const CORE = [
+/* Service Worker：离线缓存（应用壳 + 词库分片）
+ * 关键约束：
+ *   1. 安装阶段只预缓存小体积应用壳，绝不在这里拉 1MB+ 的详情数据——
+ *      否则弱网下 addAll 很容易整体失败，导致整个站点失去离线缓存。
+ *   2. 词库文件名带版本号（core.v1.txt / detail.v1.json），内容不可变，
+ *      因此可以放心 cache-first，不再每次打开都重新下载。
+ *   3. 改前端代码时同步改 CACHE 版本号，旧缓存才会被清掉。
+ */
+const CACHE = "gwc-v11";
+const SHELL = [
   "./",
   "index.html",
   "css/style.css",
@@ -8,59 +15,67 @@ const CORE = [
   "js/db.js",
   "vendor/dexie.min.js",
   "vendor/ts-fsrs.umd.js",
-  "data/words.json",
-  "data/provenance.json",
+  "data/core.v1.txt",
   "manifest.json",
   "icons/icon-192.png",
   "icons/icon-512.png",
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
+  e.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    // 逐个缓存：单个文件失败（弱网/被拦截）不影响其余文件和其他功能
+    await Promise.allSettled(SHELL.map((url) => cache.add(new Request(url, { cache: "reload" }))));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener("fetch", (e) => {
-  const url = new URL(e.request.url);
-  if (e.request.method !== "GET") return;
-  // 词库数据：网络优先（保证更新），离线回退缓存
-  if (url.origin === location.origin && url.pathname.includes("/data/")) {
-    e.respondWith(
-      fetch(e.request)
-        .then((resp) => {
-          const copy = resp.clone();
-          caches.open(CACHE).then((c) => c.put(e.request, copy));
-          return resp;
-        })
-        .catch(() => caches.match(e.request))
-    );
-    return;
+function putInCache(request, response) {
+  if (response && response.ok) {
+    const copy = response.clone();
+    caches.open(CACHE).then((c) => c.put(request, copy)).catch(() => {});
   }
-  // 发音 API/音频：网络优先，失败回退缓存
+  return response;
+}
+
+self.addEventListener("fetch", (e) => {
+  const req = e.request;
+  if (req.method !== "GET") return;
+  const url = new URL(req.url);
+
+  // 发音 API：网络优先，离线回退缓存
   if (url.hostname === "api.dictionaryapi.dev") {
     e.respondWith(
-      fetch(e.request).then((resp) => {
-        const copy = resp.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy));
-        return resp;
-      }).catch(() => caches.match(e.request))
+      fetch(req).then((resp) => putInCache(req, resp)).catch(() => caches.match(req))
     );
     return;
   }
-  // 本地资源：缓存优先
-  if (url.origin === location.origin) {
+
+  if (url.origin !== location.origin) return;
+
+  // 词库数据：文件名带版本号，内容不可变 → 缓存优先
+  if (url.pathname.includes("/data/")) {
     e.respondWith(
-      caches.match(e.request).then((hit) => hit || fetch(e.request).then((resp) => {
-        const copy = resp.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy));
-        return resp;
-      }))
+      caches.match(req).then((hit) => hit || fetch(req).then((resp) => putInCache(req, resp)))
     );
+    return;
   }
+
+  // 应用壳：缓存优先 + 后台更新（下次打开即为新版本）
+  e.respondWith(
+    caches.match(req).then((hit) => {
+      const net = fetch(req)
+        .then((resp) => putInCache(req, resp))
+        .catch(() => hit);
+      return hit || net;
+    })
+  );
 });

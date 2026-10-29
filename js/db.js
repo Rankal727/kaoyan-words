@@ -1,10 +1,17 @@
 /* IndexedDB 存储（Dexie） + FSRS 调度封装（ts-fsrs UMD → window.FSRS） */
 "use strict";
 
+/* 学习进度库：结构只能增量迁移，禁止删库重建 */
 const DB = new Dexie("gwc-kaoyan");
 DB.version(1).stores({
   cards: "w, due",   // w: 单词; due: 下次复习时间(Date)
   logs: "date",      // date: YYYY-MM-DD; n: 新学数; r: 复习数
+});
+
+/* 词库缓存库：独立数据库，升级/清空互不影响学习进度 */
+const CacheDB = new Dexie("gwc-kaoyan-cache");
+CacheDB.version(1).stores({
+  kv: "k",           // k: 键名; v: 任意值（解析后的词库分片）
 });
 
 const FSRSLib = window.FSRS;
@@ -25,12 +32,19 @@ function freshCard(w) {
   };
 }
 
+/** 备份导入后 due / last_review 可能是字符串，统一还原成 Date */
+function normalizeCard(c) {
+  if (c.due && !(c.due instanceof Date)) c.due = new Date(c.due);
+  if (c.last_review && !(c.last_review instanceof Date)) c.last_review = new Date(c.last_review);
+  return c;
+}
+
 /** 对某词执行一次评分，返回更新后的 FSRS 卡片；isNew 用于统计当日新学 */
 async function rateWord(w, ratingName, isNew) {
   const now = new Date();
   let card = await DB.cards.get(w);
   if (!card) card = freshCard(w);
-  const log = FSRSys.repeat(card, now)[Rating[ratingName]]; // 键为数字评分 1..4
+  const log = FSRSys.repeat(normalizeCard(card), now)[Rating[ratingName]]; // 键为数字评分 1..4
   const next = Object.assign({}, log.card, { w: w });
   await DB.cards.put(next);
 
@@ -56,6 +70,21 @@ function dateKeyOffset(offsetDays) {
   const t = new Date();
   t.setDate(t.getDate() + offsetDays);
   return todayKey(t);
+}
+
+/* ---------------- 词库分片缓存（独立库，失败不影响学习） ---------------- */
+async function kvGet(k) {
+  try {
+    const rec = await CacheDB.kv.get(k);
+    return rec ? rec.v : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function kvPut(k, v) {
+  // 写缓存不阻塞渲染；配额不足等异常直接忽略，下次重新下载即可
+  return CacheDB.kv.put({ k, v }).catch(() => {});
 }
 
 /** 卡片状态展示文案 */

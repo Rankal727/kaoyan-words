@@ -21,7 +21,7 @@
    "license": "MIT"
   }
  ],
- "derived": "本应用词库 data/words.json 系对上述数据的整理与改编，依『相同方式共享』要求，同样以 CC BY-NC-SA 4.0 授权提供，仅限非商业用途。本应用仅供个人学习使用，禁止商用。",
+ "derived": "本应用词库文件（data/core.v*.txt 与 data/detail.v*.json，由 data/words.json 拆分而来）系对上述数据的整理与改编，依『相同方式共享』要求，同样以 CC BY-NC-SA 4.0 授权提供，仅限非商业用途。本应用仅供个人学习使用，禁止商用。",
  "components": [
   {"name": "ts-fsrs（复习调度算法）", "url": "https://github.com/open-spaced-repetition/ts-fsrs", "license": "MIT"},
   {"name": "Dexie（IndexedDB 封装）", "url": "https://github.com/dexie/Dexie.js", "license": "Apache-2.0"}

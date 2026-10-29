@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#6366f1">
 <title>考研英语一 · 高频词记背</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -150,10 +152,17 @@
         </div>
       </div>
       <div class="setting-row">
-        <div><div class="setting-name">每日新词量</div><div class="setting-desc">复习数量不受此限制</div></div>
+        <div><div class="setting-name">每日新词量</div><div class="setting-desc">10–200，复习数量不受此限制</div></div>
         <div class="stepper">
           <button id="new-minus">−</button><span id="new-value">30</span><button id="new-plus">＋</button>
         </div>
+      </div>
+      <div class="chip-row quick-new" id="new-presets">
+        <button class="chip" data-n="30">30</button>
+        <button class="chip" data-n="60">60</button>
+        <button class="chip" data-n="100">100</button>
+        <button class="chip" data-n="150">150</button>
+        <button class="chip" data-n="200">200</button>
       </div>
       <div class="setting-row">
         <div><div class="setting-name">词库范围</div><div class="setting-desc">高频 = 真题词频 Top 2000</div></div>

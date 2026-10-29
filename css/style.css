@@ -172,6 +172,7 @@ body {
   transition: transform .08s ease, filter .15s;
 }
 .btn-hero:active { transform: scale(.98); filter: brightness(1.05); }
+.btn-hero:disabled { opacity: .55; cursor: default; transform: none; filter: none; }
 .today-done { text-align: center; color: var(--good); font-size: 13.5px; margin-top: 12px; }
 
 /* 周条 */
@@ -400,6 +401,8 @@ body {
 }
 .stepper button:active { transform: scale(.92); }
 .stepper span { min-width: 42px; text-align: center; font-weight: 700; }
+.quick-new { margin: -4px 0 4px; padding-bottom: 2px; }
+.quick-new .chip { padding: 5px 12px; font-size: 12px; }
 .seg { display: flex; border-radius: 11px; overflow: hidden; background: var(--card-2); padding: 3px; gap: 3px; }
 .seg button {
   appearance: none; border: 0; background: transparent; color: var(--text-2);

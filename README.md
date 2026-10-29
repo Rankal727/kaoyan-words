@@ -6,8 +6,9 @@
 
 ## 功能
 
-- 真题词频排序词库（2002–2024 共 22 年真题统计，5530 词），高频 Top 2000 / 全量可切换
+- 真题词频排序词库（2002–2024 共 22 年真题统计，5528 个词条），高频 Top 2000 / 全量可切换
 - FSRS 智能复习调度（忘了 / 模糊 / 认识 三档自评，按记忆状态安排下次复习）
+- 每日新词量可调 10–200，复习数量不设上限
 - 词形变化（复数 / 现在分词 / 过去式 / 过去分词等，含不规则变化）
 - 真题原句例句（逐字摘录，标注年份与出处）
 - 词库搜索、学习统计与打卡、深浅色主题切换、数据导出/导入备份
@@ -41,7 +42,7 @@ python -m http.server 8137
 | 复习调度 | [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs) | MIT |
 | 音标与发音 | [Free Dictionary API](https://dictionaryapi.dev) | CC BY-SA 3.0 |
 
-应用内"设置 → 关于"页同样展示署名。本应用的词库文件 `data/words.json` 系对上述数据的整理与改编，依 CC BY-NC-SA 4.0 的"相同方式共享"要求，**同样以 CC BY-NC-SA 4.0 授权提供，仅限非商业用途**。
+应用内"设置 → 关于"页同样展示署名。本应用的词库文件（`data/core.v*.txt` 与 `data/detail.v*.json`）系对上述数据的整理与改编，依 CC BY-NC-SA 4.0 的"相同方式共享"要求，**同样以 CC BY-NC-SA 4.0 授权提供，仅限非商业用途**。
 
 随应用分发的开源组件：ts-fsrs（MIT）、Dexie（Apache-2.0），完整许可文本见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
 
