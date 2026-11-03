@@ -8,7 +8,7 @@
  * 文件名随之变化，旧缓存自动失效。
  */
 const DATA_VER = 1;
-const APP_VER = "2.0";
+const APP_VER = "2.1";
 const CORE_URL = `data/core.v${DATA_VER}.txt`;
 const CDN_BASE = "https://cdn.jsdelivr.net/gh/Rankal727/kaoyan-words@main/";
 /* ---------------- 全局状态 ---------------- */
@@ -288,10 +288,20 @@ function setGreeting() {
 }
 
 let todaySeq = 0;   // 多次刷新并发时，只让最后一次写回界面，避免旧结果盖新结果
+
+/* 今日待复习的判定基准：到期时间早于明天 0 点，就算"今天要复习"。
+ * FSRS 的 due 精确到时刻（昨晚 21:00 背的词今天 21:00 才到期），
+ * 只比较"此刻"会让当天的复习量在打开时显示不全，之后随时钟走动一个个冒出来。 */
+function todayEndMs() {
+  const t = new Date();
+  t.setHours(24, 0, 0, 0);   // 明天 00:00
+  return t.getTime();
+}
+
 async function refreshToday() {
   const seq = ++todaySeq;
   setGreeting();
-  const now = Date.now();
+  const horizon = todayEndMs();
   const log = (await DB.logs.get(todayKey())) || { n: 0, r: 0 };
   if (seq !== todaySeq) return;
 
@@ -300,7 +310,7 @@ async function refreshToday() {
     const it = WORD_MAP.get(c.w);
     if (!it || (settings.scope === "high" && it.r > 2000)) continue;
     learned++;
-    if (c.due.getTime() <= now) due++;
+    if (c.due.getTime() < horizon) due++;
     if (c.state === FState.Review && c.stability >= 21) masteredScope++;
   }
   let fresh = 0;
@@ -311,14 +321,14 @@ async function refreshToday() {
   $("stat-new").textContent = coreReady ? Math.min(remainNew, fresh) : "—";
   $("stat-learned").textContent = learned;
 
-  const totalTask = coreReady ? Math.min(remainNew, fresh) + due : 0;
+  const remainTask = coreReady ? Math.min(remainNew, fresh) + due : 0;
   const doneTotal = (log.n || 0) + (log.r || 0);
-  const pct = totalTask > 0
-    ? Math.min(100, Math.round((doneTotal / totalTask) * 100))
-    : (doneTotal > 0 ? 100 : 0);
+  // 分母 = 今日已完成 + 今日剩余：复习一批后分母不会缩小，进度条不会提前到 100%
+  const dayTotal = doneTotal + remainTask;
+  const pct = dayTotal > 0 ? Math.min(100, Math.round((doneTotal / dayTotal) * 100)) : 0;
   $("day-ring").style.background = `conic-gradient(var(--accent) ${pct}%, var(--card-2) 0)`;
   $("ring-pct").textContent = pct + "%";
-  $("today-done").hidden = !(coreReady && totalTask === 0 && doneTotal > 0);
+  $("today-done").hidden = !(coreReady && remainTask === 0 && doneTotal > 0);
 
   const btn = $("btn-start");
   if (!coreReady) {
@@ -326,7 +336,7 @@ async function refreshToday() {
     btn.textContent = dataError ? "词库加载失败 · 点此重试" : "词库加载中…";
   } else {
     btn.disabled = false;
-    btn.textContent = totalTask === 0 ? "自由加练 10 词" : `开始学习 · ${totalTask} 词`;
+    btn.textContent = remainTask === 0 ? "自由加练 10 词" : `开始学习 · ${remainTask} 词`;
   }
 
   const covTotal = settings.scope === "high" ? 2000 : WORDS.length || 1;
@@ -380,14 +390,15 @@ async function startSession() {
     else toast("词库还在加载，请稍候");
     return;
   }
-  const now = Date.now();
+  const horizon = todayEndMs();
   const log = await DB.logs.get(todayKey()) || { n: 0, r: 0 };
   const remainNew = Math.max(0, settings.dailyNew - (log.n || 0));
 
+  // 今日复习优先：凡今天之内（含逾期）到期的词全部排在最前，学完才轮到新词
   const dueWords = [];
   for (const x of SCOPE) {
     const c = CARDS.get(x.w);
-    if (c && c.due.getTime() <= now) dueWords.push(x.w);
+    if (c && c.due.getTime() < horizon) dueWords.push(x.w);
   }
   const introduced = new Set(CARDS.keys());
   const freshWords = [];
