@@ -6,7 +6,7 @@
  *      因此可以放心 cache-first，不再每次打开都重新下载。
  *   3. 改前端代码时同步改 CACHE 版本号，旧缓存才会被清掉。
  */
-const CACHE = "gwc-v15";
+const CACHE = "gwc-v16";
 const INSTALL_TIMEOUT = 15000;   // 单个文件安装超时：弱网下绝不能把安装挂死
 const SHELL = [
   "./",

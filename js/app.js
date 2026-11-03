@@ -8,7 +8,7 @@
  * 文件名随之变化，旧缓存自动失效。
  */
 const DATA_VER = 1;
-const APP_VER = "2.1";
+const APP_VER = "2.2";
 const CORE_URL = `data/core.v${DATA_VER}.txt`;
 const CDN_BASE = "https://cdn.jsdelivr.net/gh/Rankal727/kaoyan-words@main/";
 /* ---------------- 全局状态 ---------------- */
@@ -70,6 +70,7 @@ function applyTheme() {
 
 async function init() {
   applyTheme();
+  setVersionLabels();
   bindTabs();
   bindToday();
   bindLearn();
@@ -776,6 +777,8 @@ function bindSettings() {
   at.checked = settings.audio;
   at.addEventListener("change", () => { settings.audio = at.checked; saveSettings(); });
 
+  $("btn-check-update").addEventListener("click", checkUpdate);
+
   $("btn-export").addEventListener("click", async () => {
     const data = {
       app: "gwc-kaoyan", version: 1, exportedAt: new Date().toISOString(),
@@ -829,20 +832,66 @@ function bindSettings() {
   });
 }
 
-function renderAbout() {
-  const verLine = `<div class="src-item">应用版本 ${esc(APP_VER)} · 词库 v${DATA_VER}（${WORDS.length || "…"} 词）</div>`;
-  if (!PROV) { $("about-src").innerHTML = verLine + "<div>来源信息加载中…</div>"; return; }
-  let html = verLine + PROV.sources.map((s) =>
-    `<div class="src-item">${esc(s.name)}<br><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a><br>协议：${esc(s.license)}</div>`
-  ).join("");
-  if (PROV.derived) html += `<div class="src-item" style="color:var(--text)">${esc(PROV.derived)}</div>`;
-  if (PROV.components) {
-    html += `<div class="src-item">开源组件：` + PROV.components.map((c) =>
-      `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)}</a>（${esc(c.license)}）`).join("、") + `</div>`;
+/* ---------------- 版本与更新 ----------------
+ * APP_VER 每次发布前端改动时递增，并同步加 sw.js 的 CACHE 版本号；
+ * 用户可在设置页直接看到当前运行的版本，判断手机端是否已经更新。 */
+function setVersionLabels() {
+  $("settings-sub").textContent = `学习偏好与数据 · 应用 v${APP_VER}`;
+  $("btn-check-update").textContent = `检查更新（当前 v${APP_VER}）`;
+}
+
+async function runningCacheName() {
+  if (!("caches" in window)) return "";
+  try {
+    const keys = await caches.keys();
+    return keys.find((k) => k.startsWith("gwc-")) || "";
+  } catch (e) { return ""; }
+}
+
+async function checkUpdate() {
+  if (!("serviceWorker" in navigator) || !location.protocol.startsWith("http")) {
+    toast("当前环境不支持检查更新");
+    return;
   }
-  if (PROV.notices) html += `<div>${esc(PROV.notices)}</div>`;
-  html += `<div style="margin-top:6px">${esc(PROV.note)}</div>`;
-  $("about-src").innerHTML = html;
+  toast("正在检查更新…", 4000);
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) { toast("离线缓存尚未就绪，请联网刷新后再试", 3000); return; }
+    await reg.update();
+    await new Promise((r) => setTimeout(r, 3000));   // 给新 SW 安装留时间
+    if (reg.installing || reg.waiting) {
+      // 新版本安装完成后 skipWaiting 接管，controllerchange 会自动刷新页面
+      toast("发现新版本，正在更新…", 5000);
+      return;
+    }
+    const cache = await runningCacheName();
+    toast(`已是最新版本 v${APP_VER}${cache ? " · " + cache : ""}`, 3000);
+  } catch (e) {
+    toast("检查更新失败，请检查网络后重试", 3000);
+  }
+}
+
+function renderAbout() {
+  const verLine = `<div class="src-item">应用版本 ${esc(APP_VER)} · 词库 v${DATA_VER}（${WORDS.length || "…"} 词）<span id="about-cache"></span></div>`;
+  if (!PROV) {
+    $("about-src").innerHTML = verLine + "<div>来源信息加载中…</div>";
+  } else {
+    let html = verLine + PROV.sources.map((s) =>
+      `<div class="src-item">${esc(s.name)}<br><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a><br>协议：${esc(s.license)}</div>`
+    ).join("");
+    if (PROV.derived) html += `<div class="src-item" style="color:var(--text)">${esc(PROV.derived)}</div>`;
+    if (PROV.components) {
+      html += `<div class="src-item">开源组件：` + PROV.components.map((c) =>
+        `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)}</a>（${esc(c.license)}）`).join("、") + `</div>`;
+    }
+    if (PROV.notices) html += `<div>${esc(PROV.notices)}</div>`;
+    html += `<div style="margin-top:6px">${esc(PROV.note)}</div>`;
+    $("about-src").innerHTML = html;
+  }
+  runningCacheName().then((c) => {
+    const el = $("about-cache");
+    if (el) el.textContent = c ? ` · 缓存 ${c}` : "";
+  });
 }
 
 /* ---------------- 发音 ---------------- */

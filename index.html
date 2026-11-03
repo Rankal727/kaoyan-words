@@ -140,7 +140,7 @@
   <!-- ============ 设置 ============ -->
   <section class="view" id="view-settings" hidden>
     <header class="page-head">
-      <div><div class="greeting">设置</div><div class="sub">学习偏好与数据</div></div>
+      <div><div class="greeting">设置</div><div class="sub" id="settings-sub">学习偏好与数据</div></div>
     </header>
     <div class="card">
       <div class="setting-row">
@@ -178,6 +178,7 @@
     </div>
     <div class="card">
       <div class="card-title">数据</div>
+      <button class="btn-ghost" id="btn-check-update">检查更新</button>
       <button class="btn-ghost" id="btn-export">导出学习备份 (JSON)</button>
       <button class="btn-ghost" id="btn-import">导入学习备份</button>
       <input type="file" id="import-file" accept="application/json" hidden>
